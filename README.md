@@ -1,138 +1,61 @@
-<p align="center">
-  <a href="https://lotus.filecoin.io/" title="Filecoin Docs">
-    <img src="documentation/images/lotus_logo_h.png" alt="Project Lotus Logo" width="244" />
-  </a>
-</p>
+<h1 align="center">FileDES测试样例</h1>
 
-<h1 align="center">Project Lotus - 莲</h1>
+本代码是FileDES系统的测试样例。本文件介绍如何在本地部署FileDES以及如何测试一个多版本文件的聚合证明验证时间（该文件具有4个版本）。
 
-<p align="center">
-  <a href="https://circleci.com/gh/filecoin-project/lotus"><img src="https://circleci.com/gh/filecoin-project/lotus.svg?style=svg"></a>
-  <a href="https://codecov.io/gh/filecoin-project/lotus"><img src="https://codecov.io/gh/filecoin-project/lotus/branch/master/graph/badge.svg"></a>
-  <a href="https://goreportcard.com/report/github.com/filecoin-project/lotus"><img src="https://goreportcard.com/badge/github.com/filecoin-project/lotus" /></a>  
-  <a href=""><img src="https://img.shields.io/badge/golang-%3E%3D1.17-blue.svg" /></a>
-  <br>
-</p>
+## FileDES部署
+**系统与软件依赖安装**:
 
-Lotus is an implementation of the Filecoin Distributed Storage Network. For more details about Filecoin, check out the [Filecoin Spec](https://spec.filecoin.io).
+FileDES在Ubuntu22.04上进行开发和测试。为了正确部署FileDES需要通过下面的命令安装如下软件依赖
 
-## Building & Documentation
-
-> Note: The default `master` branch is the dev branch, please use with caution. For the latest stable version, checkout the most recent [`Latest release`](https://github.com/filecoin-project/lotus/releases).
- 
-For complete instructions on how to build, install and setup lotus, please visit [https://lotus.filecoin.io](https://lotus.filecoin.io/lotus/install/prerequisites/#supported-platforms). Basic build instructions can be found further down in this readme.
-
-## Reporting a Vulnerability
-
-Please send an email to security@filecoin.org. See our [security policy](SECURITY.md) for more details.
-
-## Related packages
-
-These repos are independent and reusable modules, but are tightly integrated into Lotus to make up a fully featured Filecoin implementation:
-
-- [go-fil-markets](https://github.com/filecoin-project/go-fil-markets) which has its own [kanban work tracker available here](https://app.zenhub.com/workspaces/markets-shared-components-5daa144a7046a60001c6e253/board)
-- [builtin-actors](https://github.com/filecoin-project/builtin-actors)
-
-## Contribute
-
-Lotus is a universally open project and welcomes contributions of all kinds: code, docs, and more. However, before making a contribution, we ask you to heed these recommendations:
-
-1. If the proposal entails a protocol change, please first submit a [Filecoin Improvement Proposal](https://github.com/filecoin-project/FIPs).
-2. If the change is complex and requires prior discussion, [open an issue](github.com/filecoin-project/lotus/issues) or a [discussion](https://github.com/filecoin-project/lotus/discussions) to request feedback before you start working on a pull request. This is to avoid disappointment and sunk costs, in case the change is not actually needed or accepted.
-3. Please refrain from submitting PRs to adapt existing code to subjective preferences. The changeset should contain functional or technical improvements/enhancements, bug fixes, new features, or some other clear material contribution. Simple stylistic changes are likely to be rejected in order to reduce code churn.
-
-When implementing a change:
-
-1. Adhere to the standard Go formatting guidelines, e.g. [Effective Go](https://golang.org/doc/effective_go.html). Run `go fmt`.
-2. Stick to the idioms and patterns used in the codebase. Familiar-looking code has a higher chance of being accepted than eerie code. Pay attention to commonly used variable and parameter names, avoidance of naked returns, error handling patterns, etc.
-3. Comments: follow the advice on the [Commentary](https://golang.org/doc/effective_go.html#commentary) section of Effective Go.
-4. Minimize code churn. Modify only what is strictly necessary. Well-encapsulated changesets will get a quicker response from maintainers.
-5. Lint your code with [`golangci-lint`](https://golangci-lint.run) (CI will reject your PR if unlinted).
-6. Add tests.
-7. Title the PR in a meaningful way and describe the rationale and the thought process in the PR description.
-8. Write clean, thoughtful, and detailed [commit messages](https://chris.beams.io/posts/git-commit/). This is even more important than the PR description, because commit messages are stored _inside_ the Git history. One good rule is: if you are happy posting the commit message as the PR description, then it's a good commit message.
-
-## Basic Build Instructions
-**System-specific Software Dependencies**:
-
-Building Lotus requires some system dependencies, usually provided by your distribution.
-
-Ubuntu/Debian:
-```
-sudo apt install mesa-opencl-icd ocl-icd-opencl-dev gcc git bzr jq pkg-config curl clang build-essential hwloc libhwloc-dev wget -y && sudo apt upgrade -y
+Ubuntu:
+```bash
+sudo apt install openjdk-17-jdk openjdk-17-jre mesa-opencl-icd ocl-icd-opencl-dev gcc git bzr jq pkg-config curl clang build-essential hwloc libhwloc-dev wget -y && sudo apt upgrade -y
 ```
 
-Fedora:
-```
-sudo dnf -y install gcc make git bzr jq pkgconfig mesa-libOpenCL mesa-libOpenCL-devel opencl-headers ocl-icd ocl-icd-devel clang llvm wget hwloc hwloc-devel
-```
+**Go语言安装**
 
-For other distributions you can find the required dependencies [here.](https://lotus.filecoin.io/lotus/install/prerequisites/#supported-platforms) For instructions specific to macOS, you can find them [here.](https://lotus.filecoin.io/lotus/install/macos/)
-
-#### Go
-
-To build Lotus, you need a working installation of [Go 1.18.1 or higher](https://golang.org/dl/):
+FileDES以Go语言进行开发，为了正确编译FileDES，需要安装Go语言（在开发时使用的是Go 1.18.1版本，建议安装相同版本，如果安装更新的版本可能会在编译时出现错误）
 
 ```bash
 wget -c https://golang.org/dl/go1.18.1.linux-amd64.tar.gz -O - | sudo tar -xz -C /usr/local
 ```
 
 **TIP:**
-You'll need to add `/usr/local/go/bin` to your path. For most Linux distributions you can run something like:
+在安装完Go语言后需要将GOBIN加入路径，可以通过下面的命令实现：
 
-```shell
+```bash
 echo "export PATH=$PATH:/usr/local/go/bin" >> ~/.bashrc && source ~/.bashrc
 ```
 
-See the [official Golang installation instructions](https://golang.org/doc/install) if you get stuck.
+**编译FileDES**
+在安装完所有软件依赖和Go语言后，即可通过下面的命令对FileDES进行编译：
+```bash
+make debug
+```
+该命令将构建FileDES的所有组件，由于FileDES是基于Filecoin的lotus开发，这些组件以lotus开头命名。(lotus, lotus-fountain, lotus-gateway, lotus-miner, lotus-seed, lotus-shed, lotus-stats, lotus-wallet and lotus-worker)另外如果是首次编译FileDES，由于其需要下载相关参数，编译过程可能会比较慢。
 
-### Build and install Lotus
+### 多版本文件聚合证明测试样例
 
-Once all the dependencies are installed, you can build and install the Lotus suite (`lotus`, `lotus-miner`, and `lotus-worker`).
+目前本代码只提供了对于具有4个版本的多版本文件生成聚合证明的测试功能，后续将对该功能进行完善。
+目前代码的scripts_FileDES中提供了启动脚本（run.sh）和多版本文件测试脚本（multi_files_test.sh）。测试文件在testdata文件夹下，是一个初始版本的ppt文件（v1.pptx）和三个通过bsdiff命令生成的增量文件（v1+patch1=v2.pptx,v1+patch1+patch2=v3.pptx,v1+patch1+patch2+patch3=v4.pptx）。要进行测试，需要在FileDES目录下运行下面两条指令：
+```bash
+bash scripts_FileDES/run.sh
+```
+等待该命令运行完成后，会在本地启动一个FileDES客户端（client）和FileDES服务器（miner），此时可以运行以下命令：
+```bash
+bash scripts_FileDES/multi_files_test.sh
+```
+该命令会上传初始版本的ppt文件和三个增量文件，并最终生成文件Verify_Agg，包含本次聚合证明验证的时间。
+由于FileDES以Filecoin的原生代码为基础进行开发，本代码也会运行Filecoin原生的证明生成过程，因此运行速度较慢。
 
-1. Clone the repository:
-
-   ```sh
-   git clone https://github.com/filecoin-project/lotus.git
-   cd lotus/
-   ```
-   
-Note: The default branch `master` is the dev branch where the latest new features, bug fixes and improvement are in. However, if you want to run lotus on Filecoin mainnet and want to run a production-ready lotus, get the latest release[ here](https://github.com/filecoin-project/lotus/releases).
-
-2. To join mainnet, checkout the [latest release](https://github.com/filecoin-project/lotus/releases).
-
-   If you are changing networks from a previous Lotus installation or there has been a network reset, read the [Switch networks guide](https://lotus.filecoin.io/lotus/manage/switch-networks/) before proceeding.
-
-   For networks other than mainnet, look up the current branch or tag/commit for the network you want to join in the [Filecoin networks dashboard](https://network.filecoin.io), then build Lotus for your specific network below.
-
-   ```sh
-   git checkout <tag_or_branch>
-   # For example:
-   git checkout <vX.X.X> # tag for a release
-   ```
-
-   Currently, the latest code on the _master_ branch corresponds to mainnet.
-
-3. If you are in China, see "[Lotus: tips when running in China](https://lotus.filecoin.io/lotus/configure/nodes-in-china/)".
-4. This build instruction uses the prebuilt proofs binaries. If you want to build the proof binaries from source check the [complete instructions](https://lotus.filecoin.io/lotus/install/prerequisites/). Note, if you are building the proof binaries from source, [installing rustup](https://lotus.filecoin.io/lotus/install/linux/#rustup) is also needed.
-
-5. Build and install Lotus:
-
-   ```sh
-   make clean all #mainnet
-
-   # Or to join a testnet or devnet:
-   make clean calibnet # Calibration with min 32GiB sectors
-
-   sudo make install
-   ```
-
-   This will put `lotus`, `lotus-miner` and `lotus-worker` in `/usr/local/bin`.
-
-   `lotus` will use the `$HOME/.lotus` folder by default for storage (configuration, chain data, wallets, etc). See [advanced options](https://lotus.filecoin.io/lotus/configure/defaults/#environment-variables) for information on how to customize the Lotus folder.
-
-6. You should now have Lotus installed. You can now [start the Lotus daemon and sync the chain](https://lotus.filecoin.io/lotus/install/linux/#start-the-lotus-daemon-and-sync-the-chain).
-
-## License
-
-Dual-licensed under [MIT](https://github.com/filecoin-project/lotus/blob/master/LICENSE-MIT) + [Apache 2.0](https://github.com/filecoin-project/lotus/blob/master/LICENSE-APACHE)
+**TIP:**
+在运行过程中可以通过下面的命令查看FileDES服务器处理文件的状态信息：
+```bash
+./lotus-miner sectors list
+```
+### 停止运行
+可通过以下指令停止FileDES运行：
+```bash
+./lotus-miner stop
+./lotus daemon stop
+```
